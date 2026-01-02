@@ -1,7 +1,7 @@
 # DoomMe
 <p align="center">
 <a href="menu/episode_1.md">
-<img src="https://cdn.jsdelivr.net/gh/Kuberwastaken/DoomMe@main/static/start-visual.gif" alt="Click to Play DOOM" width="640">
+<img src="https://github.com/Kuberwastaken/DoomMe/blob/main/static/start-visual.gif" alt="Click to Play DOOM" width="640">
 </a>
 <br>
 <sub><strong>Click to Play DOOM</strong></sub>
@@ -56,3 +56,4 @@ The `linker.py` script ties it all together into a massive graph.
 - **↖️ / ↗️ / ↙️ / ↘️**: Strafe (Move diagonally while facing same direction)
 
 *(Click the top image to start your tour)*
+
