@@ -1,0 +1,3 @@
+vizdoom
+opencv-python
+pillow
