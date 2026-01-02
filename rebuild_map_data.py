@@ -17,12 +17,12 @@ def main():
     angles = set()
 
     print("Scanning assets/...")
-    files = list(ASSETS_DIR.glob("doom_*.jpg"))
+    files = list(ASSETS_DIR.glob("doom_*.webp"))
     print(f"Found {len(files)} screenshot files.")
 
     for f in files:
-        # Parse doom_X_Y_ANGLE.jpg
-        match = re.match(r"doom_(-?\d+)_(-?\d+)_(\d+).jpg", f.name)
+        # Parse doom_X_Y_ANGLE.webp
+        match = re.match(r"doom_(-?\d+)_(-?\d+)_(\d+).webp", f.name)
         if match:
             x = int(match.group(1))
             y = int(match.group(2))
