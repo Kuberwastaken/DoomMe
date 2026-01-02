@@ -170,15 +170,16 @@ def generate_readme(total_positions: int):
     # Root README points to menu/episode_1.md
     # We use static/start-visual.gif if available, else static/1.png
     
-    img_src = "static/start-visual.gif"
-    if not (STATIC_DIR / "start-visual.gif").exists():
-        img_src = "static/1.png" # Fallback
+    # CDN Link for caching/speed
+    img_src = "https://cdn.jsdelivr.net/gh/Kuberwastaken/DoomMe@main/static/start-visual.gif"
         
     readme = f"""# DoomMe
 <p align="center">
 <a href="menu/episode_1.md">
-<img src="{img_src}" alt="Click to Start" width="640">
+<img src="{img_src}" alt="Click to Play DOOM" width="640">
 </a>
+<br>
+<sub><strong>Click to Play DOOM</strong></sub>
 </p>
 
 ---

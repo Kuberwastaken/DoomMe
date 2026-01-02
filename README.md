@@ -1,8 +1,10 @@
 # DoomMe
 <p align="center">
 <a href="menu/episode_1.md">
-<img src="static/start-visual.gif" alt="Click to Start" width="640">
+<img src="https://cdn.jsdelivr.net/gh/Kuberwastaken/DoomMe@main/static/start-visual.gif" alt="Click to Play DOOM" width="640">
 </a>
+<br>
+<sub><strong>Click to Play DOOM</strong></sub>
 </p>
 
 ---
