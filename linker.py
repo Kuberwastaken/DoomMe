@@ -99,7 +99,12 @@ def generate_navigation_markdown(x: int, y: int, angle: int,
     se_pos = (*add_pt(add_pt(curr_pos, back), right), angle) # Back-Right
 
     # shoot (reload) - stay put
-    shoot_link = f'<a href="{get_state_filename(x, y, angle)}">💥</a>'
+    # PROXIMITY END GAME TRIGGER
+    # Final room approx: x[2944, 3072], y[-4864, -4608]
+    if x >= 2944 and y <= -4608:
+        shoot_link = f'<a href="end_game.md">💥</a>'
+    else:
+        shoot_link = f'<a href="{get_state_filename(x, y, angle)}">💥</a>'
 
     # Link Helper
     def get_link(target, label):
@@ -243,6 +248,23 @@ The `linker.py` script ties it all together into a massive graph.
         f.write(readme)
     print("README.md saved")
 
+def generate_end_screen():
+    print("Generating end_game.md...")
+    content = """<p align="center">
+<img src="../static/end-screen.png" alt="THE END" width="640">
+</p>
+
+<h2 align="center">YOU SURVIVED E1M1</h2>
+
+<p align="center">
+<a href="../menu/episode_1.md"><strong>🔄 RESTART MISSION</strong></a>
+&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
+<a href="https://github.com/Kuberwastaken/DoomMe"><strong>⭐ STAR PROJECT</strong></a>
+</p>
+"""
+    with open(GAME_DIR / "end_game.md", "w", encoding="utf-8") as f:
+        f.write(content)
+
 def main():
     print("Linker v3 Starting...")
     map_data = load_map_data()
@@ -272,6 +294,7 @@ def main():
             
     generate_all_states(positions, map_data.get("step_size", 64))
     generate_readme(len(positions))
+    generate_end_screen()
     print("Done.")
 
 if __name__ == "__main__":

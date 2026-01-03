@@ -1,7 +1,7 @@
 # DoomMe
 <p align="center">
 <a href="menu/episode_1.md">
-<img src="https://github.com/Kuberwastaken/DoomMe/blob/main/static/start-visual.gif" alt="Click to Play DOOM" width="640">
+<img src="https://cdn.jsdelivr.net/gh/Kuberwastaken/DoomMe@main/static/start-visual.gif" alt="Click to Play DOOM" width="640">
 </a>
 <br>
 <sub><strong>Click to Play DOOM</strong></sub>
@@ -10,80 +10,49 @@
 ---
 
 ## **Overview**
-**DoomMe** is **Doom (1993)** in spectator mode — the classic E1M1 map rendered entirely within GitHub's markdown viewer.
+**DoomMe** is an experimental "spectator mode" exploration of the classic **Doom (1993)** E1M1 map, rendered entirely within GitHub's markdown viewer. 
 
-Navigate through the level by clicking directional arrows. Every view is pre-rendered; every movement is a hyperlink. No JavaScript, no WASM, no backend — just 4,356 interlinked screenshots forming a explorable graph of the original level geometry.
+It is **not** a playable version of Doom. Instead, it is a static traversal of the level's geometry, pre-rendered and interlinked to allow you to "walk" through the map by clicking directional buttons. Think of it as a museum tour of the E1M1 level design.
 
 <p align="center">
 <img src="static/e1m1_map.png" alt="E1M1 Map Layout via DoomWiki" width="600">
 <br>
-<sub><em>Map layout of E1M1 (Hangar) — fully explorable in this project.</em></sub>
+<sub><em>Map layout of E1M1 (Hangar) - The area covered by this project.</em></sub>
 </p>
-
----
 
 ## **How It Works**
+The "engine" you are interacting with is purely illusory. There is no JavaScript, no WASM, and no server-side logic. Every possible view and movement is pre-calculated.
 
-### **1. Map Extraction (Omgifol)**
-The first challenge was accurately mapping the entire playable area.
+### **1. The Map Extraction (Omgifol)**
+The biggest challenge was accurately mapping the playable area. 
+- **Initial Failure (BFS)**: My first attempt used a "Blind Walk" algorithm (Breadth-First Search) where an agent would bump into walls to find paths. This failed to discover disconnected rooms or areas behind doors.
+- **The Solution**: I switched to **[Omgifol](https://github.com/devinacker/omgifol)**, a Python library that parses the original `doom1.wad` file.
+    - We extract the **Linedefs** and **Sectors**.
+    - We filter for sectors with a floor height > 50 (playable space).
+    - We use a **Point-in-Polygon** ray-casting algorithm to generate a grid of valid coordinates every 64 units.
 
-- **Initial Failure (BFS)**: Early attempts used a "Blind Walk" algorithm where an agent bumped into walls to discover paths. This failed to find areas behind closed doors.
-- **The WAD Solution**: I edited the original `doom1.wad` to remove all doors/gates, then used **[Omgifol](https://github.com/devinacker/omgifol)** to parse the level geometry:
-  - Extract **Linedefs** and **Sectors** from the WAD
-  - Filter for walkable sectors (floor height > 56 units)
-  - Apply **Point-in-Polygon** ray-casting to generate a 64-unit grid
-  - **Result**: 1,089 valid positions covering the entire map
+### **2. The Capture (VizDoom)**
+Once the grid was established (resulting in ~1,085 valid nodes), I used **[VizDoom](http://vizdoom.cs.put.poznan.pl/)** to capture the visuals.
+- The agent is "teleported" to each coordinate.
+- It rotates to 4 cardinal directions (North, South, East, West).
+- A screenshot is saved for every single state.
+- **Result**: ~4,340 snapshots of the map.
 
-### **2. Visual Capture (VizDoom)**
-**[VizDoom](http://vizdoom.cs.put.poznan.pl/)** renders each position at 4 angles (0°, 90°, 180°, 270°).
+### **3. The Graph (Linker)**
+The `linker.py` script ties it all together into a massive graph.
+- **Nodes**: `(x, y, angle)`
+- **Edges**:
+    - **Move**: `(x, y)` -> `(x ± 64, y ± 64)` details.
+    - **Polishing**: I utilized 8-way movement logic, allowing for strafing (diagonal moves) which keeps the camera angle fixed but changes position.
 
-- **Teleportation**: Warp to each coordinate via console command
-- **Rotation Fix**: Early versions used `angle X` console commands which were unreliable due to physics tick interference. The fix was implementing **closed-loop control**:
-  - Read current angle via `GameVariable.ANGLE`
-  - Calculate rotation delta
-  - Apply via `TURN_LEFT_RIGHT_DELTA` button
-  - Repeat until aligned (feedback loop)
-- **Capture Settings**: God mode enabled, enemies disabled, HUD messages suppressed
-- **Result**: 4,356 WebP screenshots (1,089 positions × 4 angles)
-
-### **3. Navigation Graph (Linker)**
-The `linker.py` script generates the markdown navigation files.
-
-- **Nodes**: Each state is `(x, y, angle)` 
-- **Movement**: 8-directional with diagonal strafing
-- **Rotation**: Left/Right arrows rotate 90° in place (no movement)
-- **Result**: 4,356 interlinked markdown files
-
----
-
-## **Technical Details**
-
-| Aspect | Choice | Reason |
-|--------|--------|--------|
-| **Grid Size** | 64 units | Matches Doom's floor texture alignment |
-| **Angles** | 4 (90° increments) | Balance between smoothness and file count |
-| **Format** | WebP @ 85% | Small files, good quality |
-| **Resolution** | 640×480 | Classic Doom resolution |
+## **Technical Roadblocks & Choices**
+1.  **File Count vs. Git**: Storing 4,000+ files is heavy. I had to use `WebP` compression (85% quality) to keep the repo size manageable while maintaining visual fidelity.
+2.  **Grid Quantization**: Doom is continuous, but this project is discrete. The **64-unit** step size was chosen because it matches Doom's floor texture alignment (64x64 pixels). This makes the movement feel "on the beat" of the level geometry.
+3.  **Turning**: I limited turning to 90° increments. 45° turns would have doubled the file count to ~8,600 images, which was deemed too large for a single "fun" commit.
 
 ### **Controls**
-- **⬆️ / ⬇️** — Move Forward / Backward  
-- **⬅️ / ➡️** — Rotate Camera 90° (in place)  
-- **↖️ / ↗️ / ↙️ / ↘️** — Strafe diagonally
+- **⬆️ / ⬇️**: Move Forward / Backward
+- **⬅️ / ➡️**: Rotate Camera 90° Left/Right (in place)
+- **↖️ / ↗️ / ↙️ / ↘️**: Strafe diagonally (move while facing same direction)
 
----
-
-## **The Journey**
-
-1. **BFS Walker** — Failed. Couldn't find rooms behind doors.
-2. **Omgifol Parser** — Success. Extracted geometry directly from WAD.
-3. **Door Problem** — Gates blocked exploration. Edited WAD to remove them.
-4. **Rotation Bug** — Console commands unreliable. Fixed with closed-loop turning.
-5. **Final Result** — 1,089 positions, 4,356 images, full E1M1 coverage.
-
----
-
-<p align="center">
-<em>Click the image above to start exploring.</em>
-</p>
-</CodeContent>
-<parameter name="EmptyFile">false
+*(Click the top image to start your tour)*
