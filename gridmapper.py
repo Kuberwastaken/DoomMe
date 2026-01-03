@@ -40,13 +40,17 @@ def setup_game(wad_path: Path) -> vzd.DoomGame:
     game.set_render_hud(True)
     game.set_render_crosshair(False)
     game.set_render_weapon(True)
-    game.set_render_messages(False)
+    game.set_render_messages(False)  # Disable "A secret is revealed!" etc
     game.set_render_particles(False)
+    game.set_render_screen_flashes(False)  # Disable damage/pickup flashes
     
     game.add_available_game_variable(vzd.GameVariable.POSITION_X)
     game.add_available_game_variable(vzd.GameVariable.POSITION_Y)
     
-    game.add_game_args("+sv_cheats 1 -nomp -nosound +wipescreen_start None +wipescreen_end None")
+    # -nomonsters: No enemies spawn
+    # +iddqd: God mode (invincibility)
+    # +notarget: Enemies ignore player
+    game.add_game_args("+sv_cheats 1 -nomp -nosound -nomonsters +iddqd +notarget +wipescreen_start None +wipescreen_end None")
     
     game.init()
     return game

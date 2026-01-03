@@ -60,12 +60,16 @@ def generate_navigation_markdown(x: int, y: int, angle: int,
     if angle not in angle_deltas:
         return f"<!-- Unsupported angle {angle} -->"
 
-    # Vectors
+    # Movement vectors based on current facing direction
+    # Forward = direction we're facing
     fwd = angle_deltas[angle]
+    back = (-fwd[0], -fwd[1])
+    
+    # Strafe directions (perpendicular to facing)
     # Right strafe is (angle - 90)
     right_ang = (angle - 90 + 360) % 360
     right = angle_deltas[right_ang]
-    # Left strafe is (angle + 90)
+    # Left strafe is (angle + 90)  
     left_ang = (angle + 90) % 360
     left = angle_deltas[left_ang]
     
@@ -75,22 +79,24 @@ def generate_navigation_markdown(x: int, y: int, angle: int,
     # Current Pos
     curr_pos = (x, y)
     
-    # Calculate Targets
-    # 1. Top Row (NW, N, NE) - Maintain Angle (Strafe)
-    nw_pos = (*add_pt(add_pt(curr_pos, fwd), left), angle)
-    n_pos  = (*add_pt(curr_pos, fwd), angle)
-    ne_pos = (*add_pt(add_pt(curr_pos, fwd), right), angle)
+    # Calculate Targets:
+    # ROTATION: Left/Right rotate camera 90° IN PLACE (no movement!)
+    # Turn Left = same position, rotate counter-clockwise
+    turn_left_ang = (angle + 90) % 360
+    turn_left_pos = (x, y, turn_left_ang)
+    # Turn Right = same position, rotate clockwise  
+    turn_right_ang = (angle - 90 + 360) % 360
+    turn_right_pos = (x, y, turn_right_ang)
     
-    # 2. Middle Row (W, E) - Turn 90 + Move
-    w_pos = (*add_pt(curr_pos, left), left_ang)   # Turn Left + Move Left
-    e_pos = (*add_pt(curr_pos, right), right_ang) # Turn Right + Move Right
+    # MOVEMENT: Up/Down move forward/backward, maintaining angle
+    n_pos = (*add_pt(curr_pos, fwd), angle)   # Forward (Up arrow)
+    s_pos = (*add_pt(curr_pos, back), angle)  # Backward (Down arrow)
     
-    # 3. Bottom Row (SW, S, SE) - Maintain Angle (Strafe)
-    # Back vector is -fwd
-    back = (-fwd[0], -fwd[1])
-    sw_pos = (*add_pt(add_pt(curr_pos, back), left), angle)
-    s_pos  = (*add_pt(curr_pos, back), angle)
-    se_pos = (*add_pt(add_pt(curr_pos, back), right), angle)
+    # DIAGONALS: Strafe diagonally while maintaining camera direction
+    nw_pos = (*add_pt(add_pt(curr_pos, fwd), left), angle)   # Forward-Left
+    ne_pos = (*add_pt(add_pt(curr_pos, fwd), right), angle)  # Forward-Right
+    sw_pos = (*add_pt(add_pt(curr_pos, back), left), angle)  # Back-Left
+    se_pos = (*add_pt(add_pt(curr_pos, back), right), angle) # Back-Right
 
     # shoot (reload) - stay put
     shoot_link = f'<a href="{get_state_filename(x, y, angle)}">💥</a>'
@@ -102,12 +108,13 @@ def generate_navigation_markdown(x: int, y: int, angle: int,
         return f'<span style="opacity:0.3">{label}</span>'
 
     # Generate Grid Links
+    # W/E are now ROTATION (in place), not strafe+turn
     links = {
         "nw": get_link(nw_pos, "↖️"),
         "n":  get_link(n_pos, "⬆️"),
         "ne": get_link(ne_pos, "↗️"),
-        "w":  get_link(w_pos, "⬅️"),
-        "e":  get_link(e_pos, "➡️"),
+        "w":  get_link(turn_left_pos, "⬅️"),   # Just rotate left
+        "e":  get_link(turn_right_pos, "➡️"),  # Just rotate right
         "sw": get_link(sw_pos, "↙️"),
         "s":  get_link(s_pos, "⬇️"),
         "se": get_link(se_pos, "↘️"),
@@ -227,8 +234,8 @@ The `linker.py` script ties it all together into a massive graph.
 
 ### **Controls**
 - **⬆️ / ⬇️**: Move Forward / Backward
-- **⬅️ / ➡️**: Turn 90° Left/Right AND Move
-- **↖️ / ↗️ / ↙️ / ↘️**: Strafe (Move diagonally while facing same direction)
+- **⬅️ / ➡️**: Rotate Camera 90° Left/Right (in place)
+- **↖️ / ↗️ / ↙️ / ↘️**: Strafe diagonally (move while facing same direction)
 
 *(Click the top image to start your tour)*
 """
