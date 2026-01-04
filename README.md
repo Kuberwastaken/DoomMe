@@ -1,58 +1,79 @@
-# DoomMe
+<h1 align="center">DoomMe: Running DOOM from a GitHub Readme</h1>
+
 <p align="center">
 <a href="menu/episode_1.md">
-<img src="https://cdn.jsdelivr.net/gh/Kuberwastaken/DoomMe@main/static/start-visual.gif" alt="Click to Play DOOM" width="640">
+<img src="static/start-visual.gif" alt="Click to Play DOOM" width="640">
 </a>
 <br>
-<sub><strong>Click to Play DOOM</strong></sub>
+<sub><strong>Yes, this is literally the game. You can click it to start playing.</strong></sub>
+</p>
+
+<p align="center">
+<img src="https://img.shields.io/static/v1?label=Kuberwastaken&message=DoomMe&color=black&logo=github" alt="Kuberwastaken - DoomMe">
+<img src="https://img.shields.io/badge/version-5-black" alt="Version 5">
+<a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-black" alt="License MIT"></a>
 </p>
 
 ---
 
-## **Overview**
-**DoomMe** is an experimental "spectator mode" exploration of the classic **Doom (1993)** E1M1 map, rendered entirely within GitHub's markdown viewer. 
+## What Is This?
 
-It is **not** a playable version of Doom. Instead, it is a static traversal of the level's geometry, pre-rendered and interlinked to allow you to "walk" through the map by clicking directional buttons. Think of it as a museum tour of the E1M1 level design.
+**DoomMe** is Doom's E1M1 level running entirely inside GitHub's markdown viewer. Without using any javascript or a backend server, it's just **4,340 pre-rendered screenshots** linked together with hyperlinks.
+
+Every position × every angle = a unique markdown file. Click a direction, load a new file. That's the whole "engine."
+
+📖 **Full story**: [How I Made DOOM Run Inside a GitHub Readme](https://kuber.studio/blog/Projects/How-I-Made-DOOM-Run-Inside-a-GitHub-Readme)
+
+---
+
+## Gameplay
+
+Here's some gameplay I captured locally
 
 <p align="center">
-<img src="static/e1m1_map.png" alt="E1M1 Map Layout via DoomWiki" width="600">
-<br>
-<sub><em>Map layout of E1M1 (Hangar) - The area covered by this project.</em></sub>
+<img src="static/gameplay-local.gif">
 </p>
 
-## **How It Works**
-The "engine" you are interacting with is purely illusory. There is no JavaScript, no WASM, and no server-side logic. Every possible view and movement is pre-calculated.
 
-### **1. The Map Extraction (Omgifol)**
-The biggest challenge was accurately mapping the playable area. 
-- **Initial Failure (BFS)**: My first attempt used a "Blind Walk" algorithm (Breadth-First Search) where an agent would bump into walls to find paths. This failed to discover disconnected rooms or areas behind doors.
-- **The Solution**: I switched to **[Omgifol](https://github.com/devinacker/omgifol)**, a Python library that parses the original `doom1.wad` file.
-    - We extract the **Linedefs** and **Sectors**.
-    - We filter for sectors with a floor height > 50 (playable space).
-    - We use a **Point-in-Polygon** ray-casting algorithm to generate a grid of valid coordinates every 64 units.
+## Repo Structure
 
-### **2. The Capture (VizDoom)**
-Once the grid was established (resulting in ~1,085 valid nodes), I used **[VizDoom](http://vizdoom.cs.put.poznan.pl/)** to capture the visuals.
-- The agent is "teleported" to each coordinate.
-- It rotates to 4 cardinal directions (North, South, East, West).
-- A screenshot is saved for every single state.
-- **Result**: ~4,340 snapshots of the map.
+```
+DoomMe/
+├── assets/              # 4,340 WebP screenshots (doom_x_y_angle.webp)
+├── game/                # 4,340 navigation markdown files
+├── menu/                # Episode & difficulty selection screens
+├── static/              # Banner GIF, map image, menu assets
+├── linker.py            # Generates the markdown graph from map_data
+├── gridmapper.py        # VizDoom capture script
+├── omgi_mapper.py       # WAD parser using Omgifol
+├── map_data.json        # Valid (x, y) coordinates for E1M1
+└── README.md            # You are here
+```
 
-### **3. The Graph (Linker)**
-The `linker.py` script ties it all together into a massive graph.
-- **Nodes**: `(x, y, angle)`
-- **Edges**:
-    - **Move**: `(x, y)` -> `(x ± 64, y ± 64)` details.
-    - **Polishing**: I utilized 8-way movement logic, allowing for strafing (diagonal moves) which keeps the camera angle fixed but changes position.
+---
 
-## **Technical Roadblocks & Choices**
-1.  **File Count vs. Git**: Storing 4,000+ files is heavy. I had to use `WebP` compression (85% quality) to keep the repo size manageable while maintaining visual fidelity.
-2.  **Grid Quantization**: Doom is continuous, but this project is discrete. The **64-unit** step size was chosen because it matches Doom's floor texture alignment (64x64 pixels). This makes the movement feel "on the beat" of the level geometry.
-3.  **Turning**: I limited turning to 90° increments. 45° turns would have doubled the file count to ~8,600 images, which was deemed too large for a single "fun" commit.
+## How It Works (TL;DR)
 
-### **Controls**
-- **⬆️ / ⬇️**: Move Forward / Backward
-- **⬅️ / ➡️**: Rotate Camera 90° Left/Right (in place)
-- **↖️ / ↗️ / ↙️ / ↘️**: Strafe diagonally (move while facing same direction)
+1. **Parse the WAD** — `omgi_mapper.py` uses [Omgifol](https://github.com/devinacker/omgifol) to extract E1M1 geometry
+2. **Generate the grid** — Point-in-Polygon filtering on a 64-unit grid → 1,085 valid spots  
+3. **Capture screenshots** — `gridmapper.py` teleports a VizDoom agent to each spot, 4 angles each
+4. **Link it all** — `linker.py` builds the navigation graph as interlinked `.md` files
 
-*(Click the top image to start your tour)*
+## License
+
+MIT - feel free to tweak around and play with the code
+Feel free to raise issues and PRs too
+
+## Credits
+
+- ID Software for DOOM 1993 and the WAD file
+- [Omgifol](https://github.com/devinacker/omgifol) - WAD parser
+- [VizDoom](https://github.com/mwydmuch/VizDoom) - Doom AI
+- [Ultimate DOOM Builder](https://github.com/UltimateDOOMBuilder/UltimateDOOMBuilder) - WAD editor
+
+---
+
+<p align="center">
+  Made with &lt;3 by <a href="https://kuber.studio">Kuber Mehta</a>
+</p>
+
